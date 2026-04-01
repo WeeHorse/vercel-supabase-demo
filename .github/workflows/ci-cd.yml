@@ -8,6 +8,13 @@ on:
       - develop
       - feature/**
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     name: Lint, test, build, audit
