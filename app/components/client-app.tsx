@@ -9,7 +9,7 @@ import { TodoPanel } from "./todo-panel";
 export function ClientApp() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [session, setSession] = useState<Session | null>(null);
-  const [status, setStatus] = useState<{ message: string; isError: boolean } | null>(null);
+  const [status, setStatus] = useState<{ message: string; isError: boolean; } | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -29,7 +29,7 @@ export function ClientApp() {
     <div className="grid two">
       <div className="grid">
         <section className="card">
-          <h1>Lab 3 Demo v2</h1>
+          <h1>Vercel Supabase Demo</h1>
           <p className="muted">
             Demoapp för Vercel, Supabase, CI/CD, preview deployments, säkerhetsheaders, API-nycklar och RLS.
           </p>
