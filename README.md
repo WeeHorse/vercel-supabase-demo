@@ -1,4 +1,4 @@
-# Lab 3 Demo v2
+# Vercel-supabase-demo
 
 Demo-repo för kursmomentet om:
 
@@ -72,16 +72,16 @@ Preview och Production bör ha separata värden där det behövs:
 - preview-URL:er kan vara exponerade och ska inte innehålla oskyddade adminfunktioner
 - CDN-skript ska versionspinnas och skyddas med SRI
 
-## Demoidéer i klassrummet
+## Demo
 
-1. Visa att två olika användare bara ser sina egna todos.
-2. Ta tillfälligt bort en RLS-policy och visa varför det blir farligt.
-3. Visa GitHub Actions-flödet på en pull request.
-4. Visa skillnaden mellan preview och production i Vercel.
-5. Diskutera varför `service_role` bara används på serversidan.
+1. Se att två olika användare bara ser sina egna todos.
+2. Ta tillfälligt bort en RLS-policy och undersök varför det blir farligt.
+3. Undersök GitHub Actions-flödet på en pull request.
+4. Se skillnaden mellan preview och production i Vercel.
+5. Varför används `service_role` bara på serversidan.
 
 ## Obs
 
 - Byt ut Supabase-domänen i `vercel.json` så att `connect-src` pekar på rätt URL.
 - SRI-hashen i CDN-exemplet är en platshållare och behöver ersättas med riktig hash för vald filversion.
-# vercel-supabase-demo
+
