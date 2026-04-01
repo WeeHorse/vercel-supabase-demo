@@ -46,13 +46,15 @@ Kör SQL från `sql/schema.sql` i Supabase SQL Editor.
 
 ## GitHub Secrets
 
-Lägg till detta i GitHub:
+Lägg till dessa varibler (med värden) i GitHub.
+_Kan läggas som repository secrets, eller som environment variables, men då per environment._
 
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- `VERCEL_TOKEN` - från Vercel account token settings, skapa ett token med detta namnet
+- `VERCEL_ORG_ID` - från Vercel team (team id) eller organisation (org id)
+- `VERCEL_PROJECT_ID` - från Vercel projektet
+- `SUPABASE_URL` - från Supabase environment variables
+- `SUPABASE_ANON_KEY` - från Supabase environment variables
+
 
 ## Vercel Environment Variables
 
