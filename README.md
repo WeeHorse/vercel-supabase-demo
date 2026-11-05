@@ -1,89 +1,75 @@
-# Vercel-supabase-demo
+# Vercel + Supabase – DevSecOps demo
 
-Demo-repo för kursmomentet om:
+Undervisningsdemo: Next.js på Vercel, Supabase Auth + PostgreSQL, Row Level Security (RLS), server-side admin route och GitHub Actions CI/CD.
 
-- Vercel och Continuous Deployment
-- Supabase Auth och JWT-baserade sessioner
-- säker hantering av API-nycklar
-- Row Level Security (RLS)
-- jsDelivr + Subresource Integrity (SRI)
-- säkerhetsheaders i Vercel
-- GitHub Actions CI/CD
+## Arkitektur
 
-## Vad appen visar
+- **Browser:** Supabase-klient med publik/publishable nyckel och inloggad användares JWT.
+- **Supabase PostgreSQL:** `todos` skyddas av RLS för SELECT/INSERT/UPDATE/DELETE.
+- **Next.js API route:** `POST /api/admin/reindex` använder server-only privilegierad nyckel och kräver separat adminhemlighet. Den är **avstängd** om `ADMIN_API_SECRET` saknas eller har färre än 32 tecken. I produktion bör detta ersättas med adminautentisering + rollkontroll (gärna MFA), inte ett delat lösenord.
+- **GitHub Actions:** typecheck, automatiska tester, byggen, dependency audit och Vercel deployments.
 
-- Enkel login/sign-up med Supabase Auth
-- Todo CRUD direkt från frontend via `anon key`
-- Dataskydd med RLS så att varje användare bara ser sina egna rader
-- Server-side admin route som använder `SUPABASE_SERVICE_ROLE_KEY`
-- GitHub Actions för CI och Vercel CLI för preview/production deployment
-
-## 1. Installera
+## Kom igång
 
 ```bash
-npm install
-```
-
-## 2. Lägg in miljövariabler
-
-Kopiera `.env.example` till `.env.local`.
-
-```bash
+npm ci
 cp .env.example .env.local
-```
-
-Fyll sedan i riktiga värden från Supabase.
-
-## 3. Kör lokalt
-
-```bash
 npm run dev
 ```
 
-## 4. Skapa tabeller i Supabase
+Skapa ett separat Supabase-projekt och kopiera relevanta värden från Supabase Dashboard till `.env.local`. Kör `sql/schema.sql` i SQL Editor för **en ny tom demodatabas**. Vid uppdatering av en befintlig tabell kan `CREATE TABLE IF NOT EXISTS` inte lägga till nya constraints; jämför och migrera schemat separat.
 
-Kör SQL från `sql/schema.sql` i Supabase SQL Editor.
+Supabase Auth kräver att användarna kan logga in; e-postbekräftelse och redirect-inställningar kan behöva konfigureras.
 
-## GitHub Secrets
+## Nycklar
 
-Lägg till dessa varibler (med värden) i GitHub.
-_Kan läggas som repository secrets, eller som environment variables, men då per environment._
+- `NEXT_PUBLIC_SUPABASE_URL` och `NEXT_PUBLIC_SUPABASE_ANON_KEY`: synliga i browsern; använd Supabases publishable key (äldre anon key fungerar också).
+- `SUPABASE_URL` och `SUPABASE_SERVICE_ROLE_KEY`: **endast server**, aldrig i `NEXT_PUBLIC_` eller i Git.
+- `ADMIN_API_SECRET`: en slumpmässigt genererad hemlighet (minst 32 tecken) för demonstrations-endpointen, lagras server-side. Dela den aldrig i kursmaterial eller loggar.
 
-- `VERCEL_TOKEN` - från Vercel account token settings, skapa ett token med detta namnet
-- `VERCEL_ORG_ID` - från Vercel team (team id) eller organisation (org id)
-- `VERCEL_PROJECT_ID` - från Vercel projektet
-- `SUPABASE_URL` - från Supabase environment variables
-- `SUPABASE_ANON_KEY` - från Supabase environment variables
+Administrativa anrop görs med `Authorization: Bearer <ADMIN_API_SECRET>`, aldrig från klientkod. Lämna helst `ADMIN_API_SECRET` tom i publik demo så att routen förblir blockerad. Rotera tidigare hårdkodad adminhemlighet och eventuellt berörda credentials innan offentlig användning.
 
+## Row Level Security
 
-## Vercel Environment Variables
+`sql/schema.sql` aktiverar RLS och tillåter bara att `auth.uid() = todos.user_id` för vanlig inloggad användare. `USING` kontrollerar existerande rader, `WITH CHECK` nya/ändrade värden. `audit_jobs` har ingen vanlig användaråtkomst. Observera: PostgreSQL-grants och RLS behövs båda.
 
-Preview och Production bör ha separata värden där det behövs:
+### Säkerhetstester (isolera alltid)
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_APP_ENV`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+```bash
+npm test
+npm run typecheck
+npm run test:rls
+```
 
-## Viktiga säkerhetsregler
+`npm test` verifierar admin-autentiseringslogiken utan molnuppkoppling.
 
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` får användas i frontend
-- `SUPABASE_SERVICE_ROLE_KEY` får aldrig exponeras i klientkod
-- `anon key` är inte hemlig, men den måste begränsas av RLS
-- preview-URL:er kan vara exponerade och ska inte innehålla oskyddade adminfunktioner
-- CDN-skript ska versionspinnas och skyddas med SRI
+`npm run test:rls` kontrollerar i **ett separat Supabase-testprojekt** att användare B inte kan läsa, uppdatera, radera eller skapa en uppgift åt användare A. Sätt de sex `RLS_TEST_*`-variablerna i `.env.example` i din shell-miljö (Node läser dem inte automatiskt från `.env.local` vid `node --test`). Två befintliga testanvändare behövs. Testet lämnar testmiljön orörd om variabler saknas och rapporterar uttryckligen `SKIP`. Kör aldrig mot produktion.
 
-## Demo
+För att dessa tester ska köras i CI: sätt motsvarande GitHub secrets till ett separat testprojekt. Kontrollera loggen och verifiera att RLS-testet verkligen kördes, inte skippades.
 
-1. Se att två olika användare bara ser sina egna todos.
-2. Ta tillfälligt bort en RLS-policy och undersök varför det blir farligt.
-3. Undersök GitHub Actions-flödet på en pull request.
-4. Se skillnaden mellan preview och production i Vercel.
-5. Varför används `service_role` bara på serversidan.
+## GitHub Secrets och Vercel
 
-## Obs
+I GitHub behövs:
+- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (för deployment)
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY` (för CI-bygge)
+- Vid RLS-tester: sex `RLS_TEST_*`-secrets för en isolerad testmiljö.
 
-- Byt ut Supabase-domänen i `vercel.json` så att `connect-src` pekar på rätt URL.
-- SRI-hashen i CDN-exemplet är en platshållare och behöver ersättas med riktig hash för vald filversion.
+Om du använder GitHub Environments (`preview` och `production`), konfigurera Vercel-secrets för respektive environment och lämpliga skyddsregler. Repo-secrets fungerar också som fallback om environment-secrets saknas. Begränsa vilka brancher som får använda produktionsmiljön.
 
+I Vercel: konfigurera publika Supabase-variabler och servervariabler under Project Settings → Environment Variables. Använd helst separata Supabase-projekt för Preview och Production. Kontrollera att Vercels **automatiska Git-deployment** inte kör en andra parallell deployment om GitHub Actions ansvarar för deploy.
+
+## HTTP-säkerhet och CDN
+
+`vercel.json` innehåller CSP, HSTS och andra headers. CSP begränsar nu script-källor till samma origin men behåller `'unsafe-inline'` eftersom Next.js kan behöva inline-skript. För produktionshärdning rekommenderas en nonce-baserad CSP och tester mot den verkliga applikationen. `connect-src` tillåter endast same-origin samt Supabases HTTPS/WSS-domäner; utöka endast vid konkret behov. HSTS preload är avsiktligt inte påslaget utan domänvalidering.
+
+Tidigare README visade ett SRI-skript med en falsk hash. Det exemplet har tagits bort från den körande demonstrationen; om ni verkligen lägger till ett externt CDN-skript måste ni pinna exakt version och beräkna korrekt `integrity`-hash för filens bytes.
+
+## Att visa på lektionen
+
+1. Testa två användare och observera att deras todo-rader är separerade av RLS, inte av en browser-filterregel.
+2. Försök med användare B att manipulera A:s uppgift. Studera vad databasen faktiskt tillåter.
+3. Visa skillnaden mellan klientens publishable key och serverns privilegierade nyckel.
+4. Följ en pull request via GitHub Actions till Vercel Preview, och visa en main-push till Production.
+5. Jämför testlogg med och utan konfigurerade RLS-testhemligheter.
+
+**Obs:** denna demo är ett undervisningsexempel, inte en färdig produktionsmall för adminautentisering, CSP, incidentövervakning eller härdad deployment.

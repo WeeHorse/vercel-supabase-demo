@@ -1,10 +1,10 @@
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { isAuthorizedAdminRequest } from "@/lib/admin-auth.mjs";
 
 export async function POST(request: Request) {
-  const adminSecret = request.headers.get("x-admin-demo-secret");
-
-  if (adminSecret !== "teach-devsecops") {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+  // Fail closed: the privileged endpoint is disabled unless a strong secret is configured.
+  if (!isAuthorizedAdminRequest(request.headers.get("authorization"), process.env.ADMIN_API_SECRET)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -15,14 +15,13 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+      console.error("Admin reindex enqueue failed");
+      return Response.json({ error: "Operation failed" }, { status: 500 });
     }
 
     return Response.json({ ok: true });
-  } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+  } catch {
+    console.error("Admin reindex endpoint failed");
+    return Response.json({ error: "Operation failed" }, { status: 500 });
   }
 }

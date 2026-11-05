@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test"
+    "test": "node --test app.test.js",
+    "typecheck": "tsc --noEmit",
+    "test:rls": "node --test tests/rls.integration.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
