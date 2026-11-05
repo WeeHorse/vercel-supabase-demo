@@ -1,0 +1,36 @@
+name: Dependency lockfile repair (temporary)
+on:
+  push:
+    branches:
+      - fix/security-cd-rls-2026
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: github.ref == 'refs/heads/fix/security-cd-rls-2026'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Resolve security updates within declared semver ranges
+        run: npm audit fix
+      - name: Verify dependency audit
+        run: npm audit --audit-level=high
+      - name: Verify tests and types
+        run: |
+          npm test
+          npm run typecheck
+      - name: Commit updated lockfile only to PR branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json package.json
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: refresh vulnerable npm dependencies"
+            git push origin HEAD:fix/security-cd-rls-2026
+          fi
