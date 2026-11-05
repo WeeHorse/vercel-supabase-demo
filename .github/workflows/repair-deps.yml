@@ -18,13 +18,16 @@ jobs:
           node-version: 22
           cache: npm
       - name: Resolve security updates within declared semver ranges
-        run: npm audit fix
+        run: |
+          npm install next@^16.4.5
+          npm audit fix
       - name: Verify dependency audit
         run: npm audit --audit-level=high
       - name: Verify tests and types
         run: |
           npm test
           npm run typecheck
+          NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_demo npm run build
       - name: Commit updated lockfile only to PR branch
         run: |
           git config user.name "github-actions[bot]"
