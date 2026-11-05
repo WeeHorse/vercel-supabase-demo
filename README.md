@@ -64,7 +64,7 @@ I Vercel: konfigurera publika Supabase-variabler och servervariabler under Proje
 
 Tidigare README visade ett SRI-skript med en falsk hash. Det exemplet har tagits bort från den körande demonstrationen; om ni verkligen lägger till ett externt CDN-skript måste ni pinna exakt version och beräkna korrekt `integrity`-hash för filens bytes.
 
-## Att visa på lektionen
+## Bekräfta att detta funkar
 
 1. Testa två användare och observera att deras todo-rader är separerade av RLS, inte av en browser-filterregel.
 2. Försök med användare B att manipulera A:s uppgift. Studera vad databasen faktiskt tillåter.
@@ -72,4 +72,3 @@ Tidigare README visade ett SRI-skript med en falsk hash. Det exemplet har tagits
 4. Följ en pull request via GitHub Actions till Vercel Preview, och visa en main-push till Production.
 5. Jämför testlogg med och utan konfigurerade RLS-testhemligheter.
 
-**Obs:** denna demo är ett undervisningsexempel, inte en färdig produktionsmall för adminautentisering, CSP, incidentövervakning eller härdad deployment.
