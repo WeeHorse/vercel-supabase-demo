@@ -54,11 +54,10 @@ export function ClientApp() {
 
         <section className="card">
           <h2>CDN + SRI-exempel</h2>
-          <pre>{`<script
-  src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"
-  integrity="sha384-REPLACE_WITH_REAL_HASH"
-  crossorigin="anonymous"
-></script>`}</pre>
+          <p className="muted">
+            CDN-skript behöver en fast version och en verklig SRI-hash innan de kan laddas säkert.
+            Exemplet är endast en diskussionspunkt och laddar inga externa skript.
+          </p>
         </section>
 
         <section className="card">
